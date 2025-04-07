@@ -18,23 +18,19 @@
       "Celcredit\\": "src/"
     }
   },
-  "scripts": {
-    "pint": [
-      "./vendor/bin/pint"
-    ],
-    "refactor": [
-      "./vendor/bin/rector --debug"
-    ],
-    "stan": [
-      "./vendor/bin/phpstan analyse src test"
-    ],
-    "test": [
-      "./vendor/bin/phpunit --testdox"
-    ]
-  },
   "config": {
     "allow-plugins": {
       "php-http/discovery": true
     }
-  }
+  },
+  "extra": {
+    "laravel": {
+        "providers": [
+            "Celcredit\\CelcreditServiceProvider"
+        ],
+        "aliases": {
+            "Celcredit": "Celcredit\\CelcreditFacade"
+        }
+    }
+}
 }
