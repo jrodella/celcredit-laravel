@@ -7,9 +7,9 @@ class Phone
     public static function rules(): array
     {
         return [
-            'country_code' => 'required|string|max:2',
-            'area_code' => 'required|string|between:2,3',
-            'number' => 'required|string|min:8|max:9'
+            'country_code' => 'required|string',
+            'area_code' => 'required|string',
+            'number' => 'required|string'
         ];
     }
 }

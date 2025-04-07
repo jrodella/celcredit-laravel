@@ -9,10 +9,10 @@ class Business
     public static function rules(): array
     {
         return [
-            'legal_name' => 'required|string|max:150',
+            'legal_name' => 'required|string',
             'taxpayer_id' => 'required|max_digits:14',
             'foudation_date' => 'required|date_format:Y-m-d',
-            'email_address' => 'required|email|max:100'
+            'email_address' => 'required|email'
         ];
     }
 }

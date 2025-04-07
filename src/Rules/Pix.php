@@ -10,7 +10,7 @@ class Pix
     {
         return [
             'key_type' => ['required', Rule::in(['TAXPAYER_ID', 'PHONE', 'EMAIL', 'RANDOM_KEY'])],
-            'key' => 'required|string|max:140'
+            'key' => 'required|string'
         ];
     }
 }

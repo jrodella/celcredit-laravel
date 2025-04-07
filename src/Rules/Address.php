@@ -7,13 +7,13 @@ class Address
     public static function rules(): array
     {
         return [
-            'street_number' => 'required|integer|min:1',
-            'street_name' => 'required|string|max:255',
+            'street_number' => 'required|string',
+            'street_name' => 'required|string',
             'postal_code' => 'required|numeric|digits:8',
-            'district' => 'required|string|max:100',
-            'city' => 'required|string|max:100',
-            'state_code' => 'required|string|max:2',
-            'country_code' => 'required|string|max:3'
+            'district' => 'required|string',
+            'city' => 'required|string',
+            'state_code' => 'required|string',
+            'country_code' => 'required|string'
         ];
     }
 }
