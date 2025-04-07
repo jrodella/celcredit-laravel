@@ -12,8 +12,8 @@ class Address
             'postal_code' => 'required|numeric|digits:8',
             'district' => 'required|string|max:100',
             'city' => 'required|string|max:100',
-            'state_code' => 'required|string|size:2',
-            'country_code' => 'required|string|size:3'
+            'state_code' => 'required|string|max:2',
+            'country_code' => 'required|string|max:3'
         ];
     }
 }
