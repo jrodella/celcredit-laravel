@@ -6,8 +6,11 @@ use Celcredit\Types\Data;
 
 class Pix extends Data
 {
-    public function __construct(
-        public string $key_type,
-        public string $key
-    ) {}
+    public string $key_type;
+    public string $key;
+
+    public function __construct(array $data)
+    {
+        parent::__construct($data);
+    }
 }

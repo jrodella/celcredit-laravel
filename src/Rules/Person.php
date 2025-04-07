@@ -10,7 +10,7 @@ class Person
     {
         return [
             'full_name' => 'required|string|max:150',
-            'taxpayer_id' => 'required|cpf',
+            'taxpayer_id' => 'required|max_digits:11',
             'sex' => ['required', Rule::in(['MALE', 'FEMALE'])],
             'nationality' => 'required|string|max:50',
             'birth_date' => 'required|date_format:Y-m-d',
