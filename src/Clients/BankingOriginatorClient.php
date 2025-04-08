@@ -47,7 +47,7 @@ class BankingOriginatorClient extends CelcreditBaseApi
             ]
         );
 
-        return $this->post(self::CREATE_PERSON, ['json' => $data]);
+        return $this->post(self::CREATE_PERSON, $data);
     }
 
     // 2. Cadastro de Documento (Multipart)
@@ -75,7 +75,7 @@ class BankingOriginatorClient extends CelcreditBaseApi
             ]
         );
 
-        return $this->post(self::CREATE_BUSINESS, ['json' => $data]);
+        return $this->post(self::CREATE_BUSINESS, $data);
     }
 
     // 4. Vincular Pessoa x Empregador
@@ -85,7 +85,7 @@ class BankingOriginatorClient extends CelcreditBaseApi
         
         return $this->post(
             sprintf(self::LINK_RELATION, $businessId),
-            ['json' => $relation->toArray()]
+            $relation->toArray()
         );
     }
 
@@ -94,9 +94,7 @@ class BankingOriginatorClient extends CelcreditBaseApi
     {
         $this->validateRequest($simulation->toArray(), SimulationRule::rules());
         
-        return $this->post(self::SIMULATE, [
-            'json' => $simulation->toArray()
-        ]);
+        return $this->post(self::SIMULATE, $simulation->toArray());
     }
 
     // 6. Criar Solicitação
@@ -104,9 +102,7 @@ class BankingOriginatorClient extends CelcreditBaseApi
     {
         $this->validateRequest($application->toArray(), ApplicationRule::rules());
         
-        return $this->post(self::CREATE_APPLICATION, [
-            'json' => $application->toArray()
-        ]);
+        return $this->post(self::CREATE_APPLICATION, $application->toArray());
     }
 
     private function validateRequest(
