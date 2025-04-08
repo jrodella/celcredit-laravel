@@ -98,28 +98,24 @@ class CelcreditBaseApi
     {
         $token = $this->getToken() ?? $this->auth->getToken();
         $request = Http::withToken($token)
-            ->asJson()
             ->acceptJson();
 
-        // if ($this->mtlsCert) {
-        //     $request = $this->setRequestMtls($request);
-        // }
+        $hasAttachments = false;
 
         foreach ($body as $field => $document) {
             if ($document instanceof File) {
-                $request->attach($field, $document->getContent(), $document->getFileName());
-                $request->contentType('multipart/form-data; boundary=*');
+                $request->attach(
+                    $field,
+                    $document->getContent(),
+                    $document->getFileName()
+                );
+                unset($body[$field]);
+                $hasAttachments = true;
             }
         }
 
-        if ($attachment) {
-            $request->attach(
-                $attachment->getField(),
-                $attachment->getContents(),
-                $attachment->getFileName(),
-                $attachment->getHeaders()
-            );
-            $request->contentType('multipart/form-data; boundary=*');
+        if (!$hasAttachments) {
+            $request->asJson(); // Content-Type: application/json
         }
 
         return $request->post($this->getFinalUrl($endpoint), $body)
