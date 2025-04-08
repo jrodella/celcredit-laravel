@@ -114,9 +114,14 @@ class BankingOriginatorClient extends CelcreditBaseApi
         array $mainRules,
         array $nestedRules = []
     ): void {
-        $fullRules = array_merge($mainRules, $nestedRules);
+        foreach ($nestedRules as $key => $rules) {
+            $mainRules[$key] = ['nullable', 'array'];
+            foreach ($rules as $nestedKey => $nestedRule) {
+                $mainRules["$key.$nestedKey"] = $nestedRule;
+            }
+        }
         
-        $validator = Validator::make($data, $fullRules);
+        $validator = Validator::make($data, $mainRules);
         
         if ($validator->fails()) {
             throw new \InvalidArgumentException(
