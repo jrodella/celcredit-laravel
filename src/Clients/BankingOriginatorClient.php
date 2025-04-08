@@ -6,6 +6,7 @@ use Celcredit\Types\Person;
 use Celcredit\Types\Business;
 use Celcredit\Types\Document;
 use Celcredit\Types\Relation;
+use Celcredit\Types\Signature;
 use Celcredit\Types\Simulation;
 use Celcredit\Types\Application;
 use Celcredit\Common\CelcreditBaseApi;
@@ -17,6 +18,7 @@ use Celcredit\Rules\Address as AddressRule;
 use Celcredit\Rules\Business as BusinessRule;
 use Celcredit\Rules\Document as DocumentRule;
 Use Celcredit\Rules\Relation as RelationRule;
+Use Celcredit\Rules\Signature as SignatureRule;
 use Celcredit\Rules\Simulation as SimulationRule;
 use Celcredit\Rules\Application as ApplicationRule;
 
@@ -32,6 +34,7 @@ class BankingOriginatorClient extends CelcreditBaseApi
     public const LINK_RELATION = '/banking/originator/business/%s/relations';
     public const SIMULATE = '/banking/originator/applications/preview';
     public const CREATE_APPLICATION = '/banking/originator/applications';
+    public const SIGN_APPLICATION = '/banking/originator/applications/%s/signatures';
 
     // 1. Cadastro de Pessoa
     public function createPerson(Person $person): array
@@ -103,6 +106,17 @@ class BankingOriginatorClient extends CelcreditBaseApi
         $this->validateRequest($application->toArray(), ApplicationRule::rules());
         
         return $this->post(self::CREATE_APPLICATION, $application->toArray());
+    }
+
+    // 7. Assinatura de Solicitação
+    public function signApplication(string $applicationId, Signature $signature): array
+    {
+        $this->validateRequest($signature->toArray(), SignatureRule::rules());
+
+        return $this->post(
+            sprintf(self::SIGN_APPLICATION, $applicationId),
+            $signature->toArray()
+        );
     }
 
     private function validateRequest(
