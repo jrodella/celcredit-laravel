@@ -9,7 +9,7 @@ class Pix
     public static function rules(): array
     {
         return [
-            'key_type' => ['required', Rule::in(['TAXPAYER_ID', 'PHONE', 'EMAIL', 'RANDOM_KEY'])],
+            'key_type' => ['required', Rule::in(['TAXPAYER_ID', 'PHONE_NUMBER', 'EMAIL', 'ALEATORY_KEY'])],
             'key' => 'required|string'
         ];
     }
