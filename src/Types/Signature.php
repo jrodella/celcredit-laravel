@@ -10,10 +10,11 @@ class Signature extends Data
     public string $user_agent;
     public ?string $geolocation;
     public string $signed_at;
-    public Person $person;
-    
+    public array $person;
+
     public function __construct(array $data)
     {
+        $data['person'] = $data['person'] ?? [];
         parent::__construct($data);
     }
 }

@@ -7,7 +7,7 @@ use Celcredit\Types\Data;
 class Relation extends Data
 {
     public string $type;
-    public Person $person;
+    public array $person;
     public bool $signer;
 
     public function __construct(array $data)

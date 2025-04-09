@@ -12,7 +12,7 @@ class Signature
             'ip_address' => ['required', 'string'],
             'person' => ['required', 'array'],
             'person.id' => 'required|uuid',
-            'signed_at' => ['required', 'timestamp'],
+            'signed_at' => 'required|date',
             'user_agent' => ['required', 'string'],
             'geolocation' => ['nullable', 'string'],
         ];
