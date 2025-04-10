@@ -6,6 +6,7 @@ use Celcredit\Types\Data;
 
 class Simulation extends Data
 {
+    public float $total_amount_owed;
     public float $requested_amount;
     public float $interest_rate;
     public float $tac_amount;

@@ -33,6 +33,7 @@ class BankingOriginatorClient extends CelcreditBaseApi
     public const CREATE_BUSINESS = '/banking/originator/business';
     public const LINK_RELATION = '/banking/originator/business/%s/relations';
     public const SIMULATE = '/banking/originator/applications/preview';
+    public const SIMULATE_TOTAL_AMOUNT = '/banking/originator/applications/preview-total-amount';
     public const CREATE_APPLICATION = '/banking/originator/applications';
     public const SIGN_APPLICATION = '/banking/originator/applications/%s/signatures';
 
@@ -85,7 +86,7 @@ class BankingOriginatorClient extends CelcreditBaseApi
     public function linkRelation(string $businessId, Relation $relation): array
     {
         $this->validateRequest($relation->toArray(), RelationRule::rules());
-        
+
         return $this->post(
             sprintf(self::LINK_RELATION, $businessId),
             $relation->toArray()
@@ -96,15 +97,23 @@ class BankingOriginatorClient extends CelcreditBaseApi
     public function simulate(Simulation $simulation): array
     {
         $this->validateRequest($simulation->toArray(), SimulationRule::rules());
-        
+
         return $this->post(self::SIMULATE, $simulation->toArray());
+    }
+
+    // 5. Simular Solicitação
+    public function simulateTotalAmount(Simulation $simulation): array
+    {
+        $this->validateRequest($simulation->toArray(), SimulationRule::rules());
+
+        return $this->post(self::SIMULATE_TOTAL_AMOUNT, $simulation->toArray());
     }
 
     // 6. Criar Solicitação
     public function createApplication(Application $application): array
     {
         $this->validateRequest($application->toArray(), ApplicationRule::rules());
-        
+
         return $this->post(self::CREATE_APPLICATION, $application->toArray());
     }
 
@@ -130,9 +139,9 @@ class BankingOriginatorClient extends CelcreditBaseApi
                 $mainRules["$key.$nestedKey"] = $nestedRule;
             }
         }
-        
+
         $validator = Validator::make($data, $mainRules);
-        
+
         if ($validator->fails()) {
             throw new \InvalidArgumentException(
                 json_encode($validator->errors()->toArray())
@@ -143,15 +152,15 @@ class BankingOriginatorClient extends CelcreditBaseApi
     private function createMultipartPayload(Document $document): array
     {
         $file = $document->file;
-        
-        $contents = $file instanceof \Illuminate\Http\UploadedFile 
-            ? $file->get() 
+
+        $contents = $file instanceof \Illuminate\Http\UploadedFile
+            ? $file->get()
             : fopen($file->getRealPath(), 'r');
-    
+
         $filename = $file instanceof \Illuminate\Http\UploadedFile
             ? $file->getClientOriginalName()
             : $file->getFilename();
-    
+
         return [
             'multipart' => [
                 ['name' => 'type', 'contents' => $document->type],
