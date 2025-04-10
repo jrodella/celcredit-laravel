@@ -11,7 +11,7 @@ class Person extends Data
 {
     public string $full_name;
     public string $taxpayer_id;
-    public string $sex;
+    public ?string $sex;
     public string $nationality;
     public string $birth_date;
     public string $occupation;
