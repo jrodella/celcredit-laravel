@@ -6,7 +6,7 @@ use Celcredit\Types\Data;
 
 class Address extends Data
 {
-    public string $street_number;
+    public ?string $street_number;
     public string $street_name;
     public string $postal_code;
     public string $district;

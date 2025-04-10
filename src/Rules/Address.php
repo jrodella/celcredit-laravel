@@ -7,7 +7,7 @@ class Address
     public static function rules(): array
     {
         return [
-            'street_number' => 'required|string',
+            'street_number' => 'required|numeric',
             'street_name' => 'required|string',
             'postal_code' => 'required|numeric|digits:8',
             'district' => 'required|string',
