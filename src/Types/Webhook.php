@@ -6,7 +6,7 @@ use Celcredit\Types\Data;
 
 class Webhook extends Data
 {
-    public string $webhookUrl;
+    public string $url;
 
     public function __construct(array $data = [])
     {
