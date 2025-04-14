@@ -36,6 +36,7 @@ class BankingOriginatorClient extends CelcreditBaseApi
     public const SIMULATE_TOTAL_AMOUNT = '/banking/originator/applications/preview-total-amount';
     public const CREATE_APPLICATION = '/banking/originator/applications';
     public const SIGN_APPLICATION = '/banking/originator/applications/%s/signatures';
+    public const VIEW_APPLICATION = '/banking/originator/applications/%s/agreement';
 
     // 1. Cadastro de Pessoa
     public function createPerson(Person $person): array
@@ -125,6 +126,15 @@ class BankingOriginatorClient extends CelcreditBaseApi
         return $this->post(
             sprintf(self::SIGN_APPLICATION, $applicationId),
             $signature->toArray()
+        );
+    }
+
+    // 8. Download CCB
+    public function viewApplication(string $applicationId): array
+    {
+
+        return $this->get(
+            sprintf(self::VIEW_APPLICATION, $applicationId)
         );
     }
 
