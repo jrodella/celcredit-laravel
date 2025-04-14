@@ -7,22 +7,24 @@ use Celcredit\Types\Business;
 use Celcredit\Types\Document;
 use Celcredit\Types\Relation;
 use Celcredit\Types\Signature;
+use GuzzleHttp\RequestOptions;
 use Celcredit\Types\Simulation;
 use Celcredit\Types\Application;
-use Celcredit\Common\CelcreditBaseApi;
 
 use Celcredit\Rules\Pix as PixRule;
+use Celcredit\Common\CelcreditBaseApi;
 use Celcredit\Rules\Phone as PhoneRule;
+use Illuminate\Support\Facades\Storage;
 use Celcredit\Rules\Person as PersonRule;
-use Celcredit\Rules\Address as AddressRule;
-use Celcredit\Rules\Business as BusinessRule;
-use Celcredit\Rules\Document as DocumentRule;
+use Illuminate\Support\Facades\Validator;
 Use Celcredit\Rules\Relation as RelationRule;
 Use Celcredit\Rules\Signature as SignatureRule;
+use Celcredit\Rules\Address as AddressRule;
+use Celcredit\Rules\Business as BusinessRule;
+
+use Celcredit\Rules\Document as DocumentRule;
 use Celcredit\Rules\Simulation as SimulationRule;
 use Celcredit\Rules\Application as ApplicationRule;
-
-use Illuminate\Support\Facades\Validator;
 
 
 class BankingOriginatorClient extends CelcreditBaseApi
@@ -130,11 +132,16 @@ class BankingOriginatorClient extends CelcreditBaseApi
     }
 
     // 8. Download CCB
-    public function viewApplication(string $applicationId): array
+    public function viewApplication(string $applicationId, $filename): array
     {
+        $storagePath = storage_path("app/download/{$filename}");
+        Storage::makeDirectory(dirname($storagePath));
 
         return $this->get(
-            sprintf(self::VIEW_APPLICATION, $applicationId)
+            sprintf(self::VIEW_APPLICATION, $applicationId),
+            [
+                RequestOptions::SINK => $storagePath,
+            ]
         );
     }
 
