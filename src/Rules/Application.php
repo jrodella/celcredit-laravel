@@ -13,7 +13,7 @@ class Application
             'borrower.id' => 'required|uuid',
             'funding.id' => 'required|uuid',
             'payment_method' => ['required', Rule::in(['PIX'])],
-            'signature_collect_method' => ['required', Rule::in(['LINK', 'NONE'])],
+            'signature_collect_method' => ['required', Rule::in(['LINK', 'NONE', 'SMS', 'EMAIL', 'PHYSICAL'])],
             'num_payments' => 'required|integer|min:1',
         ];
     }
