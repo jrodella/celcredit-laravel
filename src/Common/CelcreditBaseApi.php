@@ -94,31 +94,47 @@ class CelcreditBaseApi
     /**
      * @throws RequestException
      */
-    public function post(string $endpoint, array $body = [], ?Attachable $attachment = null)
+    public function post(string $endpoint, array $body = []): array
     {
         $token = $this->getToken() ?? $this->auth->getToken();
-        $request = Http::withToken($token)
-            ->acceptJson();
+        $request = Http::withToken($token)->acceptJson();
 
         $hasAttachments = false;
+        $isGuzzleMultipart = !empty($body) && isset($body[0]['name']);
 
-        foreach ($body as $field => $document) {
-            if ($document instanceof File) {
-                $request->attach(
-                    $field,
-                    $document->getContent(),
-                    $document->getFileName()
-                );
+        if ($isGuzzleMultipart) {
+            return $request->asMultipart()
+                ->post($this->getFinalUrl($endpoint), $body)
+                ->throw()
+                ->json();
+        }
+
+        // Original logic for auto-switching between JSON/multipart
+        foreach ($body as $field => $value) {
+            if ($value instanceof File) {
+                $multipart[] = [
+                    'name' => $field,
+                    'contents' => $value->getContent(),
+                    'filename' => $value->getFileName()
+                ];
                 unset($body[$field]);
                 $hasAttachments = true;
+            } else {
+                $multipart[] = ['name' => $field, 'contents' => $value];
             }
         }
 
         if (!$hasAttachments) {
             $request->asJson(); // Content-Type: application/json
+        } else {
+            return $request->asMultipart()
+                ->post($this->getFinalUrl($endpoint), $multipart)
+                ->throw()
+                ->json();
         }
 
-        return $request->post($this->getFinalUrl($endpoint), $body)
+        return $request->asJson()
+            ->post($this->getFinalUrl($endpoint), $body)
             ->throw()
             ->json();
     }

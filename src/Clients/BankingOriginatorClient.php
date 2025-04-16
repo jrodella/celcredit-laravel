@@ -219,9 +219,14 @@ class BankingOriginatorClient extends CelcreditBaseApi
             : $file->getFilename();
 
         return [
-            'multipart' => [
-                ['name' => 'type', 'contents' => $document->type],
-                ['name' => 'file', 'contents' => $contents, 'filename' => $filename]
+            [
+                'name' => 'type',
+                'contents' => $document->type
+            ],
+            [
+                'name' => 'file',
+                'contents' => $contents,
+                'filename' => $filename
             ]
         ];
     }
