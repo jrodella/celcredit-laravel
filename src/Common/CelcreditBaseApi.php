@@ -128,20 +128,26 @@ class CelcreditBaseApi
      */
     public function put(
         string $endpoint,
-        ?array $body = null,
+        mixed $body = null,
+        string $contentType = 'application/json'
     ): mixed {
         $token = $this->getToken() ?? $this->auth->getToken();
         $request = Http::withToken($token)
-            ->asJson()
             ->acceptJson();
 
-        // if ($this->mtlsCert) {
-        //     $request = $this->setRequestMtls($request);
-        // }
+        $url = $this->getFinalUrl($endpoint);
 
-        return $request->put($this->getFinalUrl($endpoint), $body)
-            ->throw()
-            ->json();
+        if (is_string($body)) {
+            $request->withBody($body, $contentType);
+            $data = null;
+        } else {
+            $request->asJson();
+            $data = $body;
+        }
+
+        $response = $request->put($url, $data);
+
+        return $response->throw()->json();
     }
 
     /**

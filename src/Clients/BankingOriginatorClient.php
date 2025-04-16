@@ -11,17 +11,18 @@ use GuzzleHttp\RequestOptions;
 use Celcredit\Types\Simulation;
 use Celcredit\Types\Application;
 
+use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+
 use Celcredit\Rules\Pix as PixRule;
 use Celcredit\Common\CelcreditBaseApi;
 use Celcredit\Rules\Phone as PhoneRule;
-use Illuminate\Support\Facades\Storage;
 use Celcredit\Rules\Person as PersonRule;
-use Illuminate\Support\Facades\Validator;
 Use Celcredit\Rules\Relation as RelationRule;
 Use Celcredit\Rules\Signature as SignatureRule;
 use Celcredit\Rules\Address as AddressRule;
 use Celcredit\Rules\Business as BusinessRule;
-
 use Celcredit\Rules\Document as DocumentRule;
 use Celcredit\Rules\Simulation as SimulationRule;
 use Celcredit\Rules\Application as ApplicationRule;
@@ -30,6 +31,7 @@ use Celcredit\Rules\Application as ApplicationRule;
 class BankingOriginatorClient extends CelcreditBaseApi
 {
     // Rotas definidas como constantes
+    public const GET_PERSON = '/banking/originator/persons/%s';
     public const CREATE_PERSON = '/banking/originator/persons';
     public const ADD_DOCUMENT = '/banking/originator/persons/%s/documents';
     public const CREATE_BUSINESS = '/banking/originator/business';
@@ -90,6 +92,37 @@ class BankingOriginatorClient extends CelcreditBaseApi
     {
         $this->validateRequest($relation->toArray(), RelationRule::rules());
 
+        $person = $this->get(
+            sprintf(self::GET_PERSON, $relation->person['id']),
+            null,
+            false
+        );
+        $json = (string) $person->getBody();
+        $person = json_decode($json);
+
+        // Verifica se a pessoa já tem um empregador vinculado
+        throw_if($person->employer != null,
+            new \InvalidArgumentException(
+                'A pessoa já possui um empregador vinculado.'
+            )
+        );
+
+        $person->employer = new \stdClass();
+        $person->employer->id = $businessId;
+        $payload = json_encode($person, JSON_UNESCAPED_SLASHES);
+
+        // Atualiza a pessoa com o novo empregador
+        return $this->put(
+            sprintf(self::GET_PERSON, $relation->person['id']),
+            $payload
+        );
+    }
+
+    // 4. Vincular Pessoa x Empregador
+    public function linkRelation2(string $businessId, Relation $relation): array
+    {
+        $this->validateRequest($relation->toArray(), RelationRule::rules());
+
         return $this->post(
             sprintf(self::LINK_RELATION, $businessId),
             $relation->toArray()
@@ -132,17 +165,24 @@ class BankingOriginatorClient extends CelcreditBaseApi
     }
 
     // 8. Download CCB
-    public function viewApplication(string $applicationId, $filename): array
+    public function viewApplication(string $applicationId, $filename): mixed
     {
-        $storagePath = storage_path("app/download/{$filename}");
-        Storage::makeDirectory(dirname($storagePath));
+        $dir = 'resource';
+        $storagePath = storage_path("app/{$dir}/{$filename}");
 
-        return $this->get(
-            sprintf(self::VIEW_APPLICATION, $applicationId),
-            [
-                RequestOptions::SINK => $storagePath,
-            ]
-        );
+        // Create directory if it doesn't exist
+        Storage::makeDirectory($dir);
+
+        try {
+            return $this->get(
+                sprintf(self::VIEW_APPLICATION, $applicationId),
+                // [
+                //     RequestOptions::SINK => $storagePath, // Guzzle writes directly to the file
+                // ]
+            );
+        } catch (GuzzleException $e) {
+            throw new \Exception("Download failed: {$e->getMessage()}");
+        }
     }
 
     private function validateRequest(
