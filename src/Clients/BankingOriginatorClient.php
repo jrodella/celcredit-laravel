@@ -26,7 +26,7 @@ use Celcredit\Rules\Business as BusinessRule;
 use Celcredit\Rules\Document as DocumentRule;
 use Celcredit\Rules\Simulation as SimulationRule;
 use Celcredit\Rules\Application as ApplicationRule;
-
+use Celcredit\Types\Pix;
 
 class BankingOriginatorClient extends CelcreditBaseApi
 {
@@ -207,7 +207,29 @@ class BankingOriginatorClient extends CelcreditBaseApi
             sprintf(self::GET_APPLICATION, $applicationId)
         );
     }
-    
+
+    public function updatePixKey(string $personId, Pix $pix): array
+    {
+        $this->validateRequest($pix->toArray(), PixRule::rules());
+
+        $person = $this->get(
+            sprintf(self::GET_PERSON, $personId),
+            null,
+            false
+        );
+        $json = (string) $person->getBody();
+        $person = json_decode($json);
+
+        $person->pix->key = $pix->key;
+        $person->pix->key_type = $pix->key_type;
+        $payload = json_encode($person, JSON_UNESCAPED_SLASHES);
+
+        return $this->put(
+            sprintf(self::GET_PERSON, $personId),
+            $payload
+        );
+    }
+
     private function validateRequest(
         array $data,
         array $mainRules,
