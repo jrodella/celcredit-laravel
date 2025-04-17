@@ -35,10 +35,12 @@ class BankingOriginatorClient extends CelcreditBaseApi
     public const CREATE_PERSON = '/banking/originator/persons';
     public const ADD_DOCUMENT = '/banking/originator/persons/%s/documents';
     public const CREATE_BUSINESS = '/banking/originator/business';
+    public const GET_BUSINESS = '/banking/originator/business/%s';
     public const LINK_RELATION = '/banking/originator/business/%s/relations';
     public const SIMULATE = '/banking/originator/applications/preview';
     public const SIMULATE_TOTAL_AMOUNT = '/banking/originator/applications/preview-total-amount';
     public const CREATE_APPLICATION = '/banking/originator/applications';
+    public const GET_APPLICATION = '/banking/originator/applications/%s';
     public const SIGN_APPLICATION = '/banking/originator/applications/%s/signatures';
     public const VIEW_APPLICATION = '/banking/originator/applications/%s/agreement';
 
@@ -185,6 +187,27 @@ class BankingOriginatorClient extends CelcreditBaseApi
         }
     }
 
+    public function getPerson(string $personId): array
+    {
+        return $this->get(
+            sprintf(self::GET_PERSON, $personId)
+        );
+    }
+
+    public function getBusiness(string $businessId): array
+    {
+        return $this->get(
+            sprintf(self::GET_BUSINESS, $businessId)
+        );
+    }
+
+    public function getApplication(string $applicationId): array
+    {
+        return $this->get(
+            sprintf(self::GET_APPLICATION, $applicationId)
+        );
+    }
+    
     private function validateRequest(
         array $data,
         array $mainRules,
