@@ -74,7 +74,7 @@ class CelcreditBaseApi
     /**
      * @throws RequestException
      */
-    public function get(string $endpoint, array|string|null $query = null, $responseJson = true)
+    public function get(string $endpoint, array|string|null $query = null, $responseJson = true, array|null $options = null)
     {
         $token = $this->getToken() ?? $this->auth->getToken();
         $request = Http::withToken($token)
@@ -84,6 +84,10 @@ class CelcreditBaseApi
         // if ($this->mtlsCert) {
         //     $request = $this->setRequestMtls($request);
         // }
+
+        if ($options) {
+            $request = $request->withOptions($options);
+        }
 
         $request = $request->get($this->getFinalUrl($endpoint), $query)
             ->throw();

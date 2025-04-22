@@ -167,21 +167,29 @@ class BankingOriginatorClient extends CelcreditBaseApi
     }
 
     // 8. Download CCB
-    public function viewApplication(string $applicationId, $filename): mixed
+    public function viewApplication(string $applicationId, $filename, $dir = ''): mixed
     {
-        $dir = 'resource';
+        $dir = $dir ?? 'resource';
         $storagePath = storage_path("app/{$dir}/{$filename}");
 
         // Create directory if it doesn't exist
         Storage::makeDirectory($dir);
 
         try {
-            return $this->get(
+            $response = $this->get(
                 sprintf(self::VIEW_APPLICATION, $applicationId),
-                // [
-                //     RequestOptions::SINK => $storagePath, // Guzzle writes directly to the file
-                // ]
+                null,
+                false,
+                [
+                    RequestOptions::SINK => $storagePath, // Guzzle writes directly to the file
+                ]
             );
+            return [
+                'path' => $storagePath,
+                'url' => Storage::url($dir . '/' . $filename),
+                'response' => $response,
+                'status' => $response->getStatusCode(),
+            ];
         } catch (GuzzleException $e) {
             throw new \Exception("Download failed: {$e->getMessage()}");
         }
