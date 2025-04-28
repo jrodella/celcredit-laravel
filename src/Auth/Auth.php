@@ -32,14 +32,7 @@ class Auth
     /** @var ?string */
     protected ?string $tokenExpiry = null;
 
-    // /**
-    //  * @var ?string
-    //  */
-    // protected ?string $mtlsPassphrase = null;
-
-    // protected ?string $mtlsCert = null;
-
-    // protected ?string $mtlsKey = null;
+    protected string $scope = 'originator';
 
     /**
      * Returns the instance of this class
@@ -57,11 +50,8 @@ class Auth
 
     public function setClientCredentials(): self
     {
-        $this->clientId = $this->clientId ?? config('celcredit')['originator_client_id'];
-        $this->clientSecret = $this->clientSecret ?? config('celcredit')['originator_client_secret'];
-        // $this->mtlsPassphrase = $this->mtlsPassphrase ?? config('celcredit.mtls_passphrase');
-        // $this->mtlsCert = $this->mtlsCert ?? config('celcredit.mtls_cert_path') ?? null;
-        // $this->mtlsKey = $this->mtlsCert ?? config('celcredit.mtls_key_path') ?? null;
+        $this->clientId ??= config('celcredit')["{$this->scope}_client_id"];
+        $this->clientSecret ??= config('celcredit')["{$this->scope}_client_secret"];
 
         return $this;
     }
@@ -97,16 +87,6 @@ class Auth
 
         return $this;
     }
-
-    // /**
-    //  * @return $this
-    //  */
-    // public function setPassphrase(string $passPhrase): self
-    // {
-    //     $this->mtlsPassphrase = $passPhrase;
-
-    //     return $this;
-    // }
 
     public function setToken(string $token): self
     {
@@ -151,38 +131,6 @@ class Auth
         return $this->tokenExpiry;
     }
 
-    // public function setCertPath(string $path): self
-    // {
-    //     $this->mtlsCert = $path;
-
-    //     return $this;
-    // }
-
-    // /**
-    //  * Set the cert.pem file path
-    //  */
-    // public function setKeyPath(string $path): self
-    // {
-    //     $this->mtlsKey = $path;
-
-    //     return $this;
-    // }
-
-    // public function getMtlsKeyPath(): ?string
-    // {
-    //     return $this->mtlsKey;
-    // }
-
-    // public function getMtlsPassphrase(): ?string
-    // {
-    //     return $this->mtlsPassphrase;
-    // }
-
-    // public function getMtlsCertPath(): ?string
-    // {
-    //     return $this->mtlsCert;
-    // }
-
     /**
      * @throws RequestException
      */
@@ -199,20 +147,6 @@ class Auth
         $request = Http::asForm();
         $options = [];
 
-        // if ($this->mtlsCert) {
-        //     $options['cert'] = $this->mtlsCert;
-        // }
-
-        // if ($this->mtlsKey || $this->mtlsPassphrase) {
-        //     $options['ssl_key'] = [];
-        //     if ($this->mtlsKey) {
-        //         $options['ssl_key'][] = $this->mtlsKey;
-        //     }
-        //     if ($this->mtlsPassphrase) {
-        //         $options['ssl_key'][] = $this->mtlsPassphrase;
-        //     }
-        // }
-
         if ($options) {
             $request = $request->withOptions($options);
         }
@@ -222,6 +156,6 @@ class Auth
         $this->token = $response['access_token'];
         $this->tokenExpiry = now()->addSeconds($response['expires_in'])->unix();
 
-        event(new CelcreditAuthenticatedEvent($this->token, $this->tokenExpiry));
+        event(new CelcreditAuthenticatedEvent($this->token, $this->tokenExpiry, $this->scope));
     }
 }

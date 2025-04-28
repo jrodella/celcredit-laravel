@@ -2,17 +2,17 @@
 
 namespace Celcredit\Common;
 
-use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\File;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Celcredit\Auth\Auth;
-use Celcredit\Interfaces\Attachable;
+use Celcredit\Auth\FundingAuth;
 
 class CelcreditBaseApi
 {
     public const CACHE_NAME = 'celcredit_login_token';
+    public const CACHE_NAME_FUNDING = 'celcredit_login_funding_token';
 
     public Cache $cache;
 
@@ -22,26 +22,18 @@ class CelcreditBaseApi
     /** @var ?string */
     private ?string $token = null;
 
-    // /** @var ?string */
-    // private ?string $mtlsCert;
-
-    // /** @var ?string */
-    // private ?string $mtlsKey;
-
-    // /** @var ?string */
-    // private ?string $mtlsPassphrase;
+    /** @var ?string */
+    private ?string $funding_token = null;
 
     private readonly Auth $auth;
 
-    public function __construct(?string $mtlsPassphrase = null)
+    private readonly FundingAuth $funding_auth;
+
+    public function __construct()
     {
         $this->auth = resolve(Auth::class)->login();
+        $this->funding_auth = resolve(FundingAuth::class)->login();
         $this->api_url = config('celcredit')['api_url'];
-        // $this->mtlsCert = $this->auth->getMtlsCertPath() ?? config('celcredit')['mtls_cert_path'] ?? null;
-        // $this->mtlsKey = $this->auth->getMtlsKeyPath() ?? config('celcredit')['mtls_key_path'] ?? null;
-        // $this->mtlsPassphrase = $this->auth->getMtlsPassphrase() ??
-        //     config('celcredit')['mtls_passphrase'] ??
-        //     null;
     }
 
     public function setToken(string $token): void
@@ -64,26 +56,44 @@ class CelcreditBaseApi
         return $this->token;
     }
 
-    // public function setPassphrase(string $passPhrase): self
-    // {
-    //     $this->mtlsPassphrase = $passPhrase;
+    public function setFundingToken(string $token): void
+    {
+        $this->funding_token = $token;
+    }
 
-    //     return $this;
-    // }
+    /**
+     * @throws RequestException
+     */
+    public function getFundingToken(): ?string
+    {
+        if (Cache::has($this::CACHE_NAME_FUNDING)) {
+            $this->funding_token = Cache::get($this::CACHE_NAME_FUNDING);
+        } else {
+            $this->funding_token = $this->funding_auth->getToken();
+            Cache::put($this::CACHE_NAME_FUNDING, $this->funding_token, 2400);
+        }
+
+        return $this->funding_token;
+    }
+
+    public function tokenResolver(string $endpoint): string
+    {
+        if (str_contains($endpoint, 'funding')) {
+            return $this->getFundingToken() ?? $this->funding_auth->getToken();
+        }
+
+        return $this->getToken() ?? $this->auth->getToken();;
+    }
 
     /**
      * @throws RequestException
      */
     public function get(string $endpoint, array|string|null $query = null, $responseJson = true, array|null $options = null)
     {
-        $token = $this->getToken() ?? $this->auth->getToken();
+        $token = $this->tokenResolver($endpoint);
         $request = Http::withToken($token)
             ->asJson()
             ->acceptJson();
-
-        // if ($this->mtlsCert) {
-        //     $request = $this->setRequestMtls($request);
-        // }
 
         if ($options) {
             $request = $request->withOptions($options);
@@ -100,7 +110,7 @@ class CelcreditBaseApi
      */
     public function post(string $endpoint, array $body = []): array
     {
-        $token = $this->getToken() ?? $this->auth->getToken();
+        $token = $this->tokenResolver($endpoint);
         $request = Http::withToken($token)->acceptJson();
 
         $hasAttachments = false;
@@ -151,7 +161,7 @@ class CelcreditBaseApi
         mixed $body = null,
         string $contentType = 'application/json'
     ): mixed {
-        $token = $this->getToken() ?? $this->auth->getToken();
+        $token = $this->tokenResolver($endpoint);
         $request = Http::withToken($token)
             ->acceptJson();
 
@@ -179,15 +189,11 @@ class CelcreditBaseApi
         bool $asJson = false
     ): mixed {
         $body_format = $asJson ? 'json' : 'form_params';
-        $token = $this->getToken() ?? $this->auth->getToken();
+        $token = $this->tokenResolver($endpoint);
         $request = Http::withToken($token)
             ->asJson()
             ->acceptJson()
             ->bodyFormat($body_format);
-
-        // if ($this->mtlsCert) {
-        //     $request = $this->setRequestMtls($request);
-        // }
 
         return $request->patch($this->getFinalUrl($endpoint), $body)
             ->throw()
@@ -199,42 +205,13 @@ class CelcreditBaseApi
      */
     public function delete(string $endpoint, ?array $body = null): mixed
     {
-        $token = $this->getToken() ?? $this->auth->getToken();
+        $token = $this->tokenResolver($endpoint);
         $request = Http::withToken($token);
-
-        // if ($this->mtlsCert) {
-        //     $request = $this->setRequestMtls($request);
-        // }
 
         return $request->delete($this->getFinalUrl($endpoint), $body)
             ->throw()
             ->json();
     }
-
-    // public function setRequestMtls(PendingRequest $request): PendingRequest
-    // {
-    //     $options = [];
-
-    //     if ($this->mtlsCert) {
-    //         $options['cert'] = $this->mtlsCert;
-    //     }
-
-    //     if ($this->mtlsKey || $this->mtlsPassphrase) {
-    //         $options['ssl_key'] = [];
-    //         if ($this->mtlsKey) {
-    //             $options['ssl_key'][] = $this->mtlsKey;
-    //         }
-    //         if ($this->mtlsPassphrase) {
-    //             $options['ssl_key'][] = $this->mtlsPassphrase;
-    //         }
-    //     }
-
-    //     if ($options) {
-    //         $request = $request->withOptions($options);
-    //     }
-
-    //     return $request;
-    // }
 
     public function getFinalUrl(string $endpoint): string
     {
