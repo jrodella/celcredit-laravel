@@ -9,6 +9,7 @@ class Application extends Data
     public array $product;
     public array $borrower;
     public array $funding;
+    public array $beneficiary_account;
     public float $requested_amount;
     public float $interest_rate;
     public float $tac_amount;
