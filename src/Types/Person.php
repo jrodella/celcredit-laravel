@@ -19,14 +19,14 @@ class Person extends Data
     public string $email_address;
     public Phone $phone;
     public Address $address;
-    public Pix $pix;
+    // public Pix $pix;
 
 
     public function __construct(array $data)
     {
         $data['address'] = new Address($data['address'] ?? []);
         $data['phone'] = new Phone($data['phone'] ?? []);
-        $data['pix'] = new Pix($data['pix'] ?? []);
+        // $data['pix'] = new Pix($data['pix'] ?? []);
         parent::__construct($data);
     }
 }
