@@ -54,7 +54,7 @@ class BankingOriginatorClient extends CelcreditBaseApi
             [
                 'phone' => PhoneRule::rules(),
                 'address' => AddressRule::rules(),
-                'pix' => PixRule::rules()
+                // 'pix' => PixRule::rules()
             ]
         );
 
