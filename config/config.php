@@ -6,8 +6,12 @@ return [
     'originator_id' => env('CELCREDIT_ORIGINATOR_ID', null),
     'originator_client_id' => env('CELCREDIT_ORIGINATOR_CLIENT_ID', null),
     'originator_client_secret' => env('CELCREDIT_ORIGINATOR_CLIENT_SECRET', null),
-    'funding_id' => env('CELCREDIT_FUNDING_ID', null),
-    'funding_client_id' => env('CELCREDIT_FUNDING_CLIENT_ID', null),
-    'funding_client_secret' => env('CELCREDIT_FUNDING_CLIENT_SECRET', null),
     'product_id' => env('CELCREDIT_PRODUCT_ID', null),
+    'funding' => [
+        'default' => [
+            'id' => env('CELCREDIT_FUNDING_DEFAULT_ID'),
+            'client_id' => env('CELCREDIT_FUNDING_DEFAULT_CLIENT_ID'),
+            'client_secret' => env('CELCREDIT_FUNDING_DEFAULT_CLIENT_SECRET'),
+        ],
+    ],
 ];

@@ -25,14 +25,14 @@ class CelcreditBaseApi
     /** @var ?string */
     private ?string $funding_token = null;
 
-    private readonly Auth $auth;
+    protected readonly Auth $auth;
 
-    private readonly FundingAuth $funding_auth;
+    protected readonly FundingAuth $funding_auth;
 
-    public function __construct()
+    public function __construct(string $fundingAccount = 'default')
     {
         $this->auth = resolve(Auth::class)->login();
-        $this->funding_auth = resolve(FundingAuth::class)->login();
+        $this->funding_auth = resolve(FundingAuth::class)->forAccount($fundingAccount);
         $this->api_url = config('celcredit')['api_url'];
     }
 
@@ -66,23 +66,25 @@ class CelcreditBaseApi
      */
     public function getFundingToken(): ?string
     {
-        if (Cache::has($this::CACHE_NAME_FUNDING)) {
-            $this->funding_token = Cache::get($this::CACHE_NAME_FUNDING);
+        $cacheKey = self::CACHE_NAME_FUNDING . "_" . $this->funding_auth->getAccountIdentifier();
+    
+        if (Cache::has($cacheKey)) {
+            $this->funding_token = Cache::get($cacheKey);
         } else {
             $this->funding_token = $this->funding_auth->getToken();
-            Cache::put($this::CACHE_NAME_FUNDING, $this->funding_token, 2400);
+            Cache::put($cacheKey, $this->funding_token, 2400);
         }
-
+    
         return $this->funding_token;
     }
 
     public function tokenResolver(string $endpoint): string
     {
         if (str_contains($endpoint, 'funding')) {
-            return $this->getFundingToken() ?? $this->funding_auth->getToken();
+            return $this->getFundingToken();
         }
-
-        return $this->getToken() ?? $this->auth->getToken();;
+    
+        return $this->getToken();
     }
 
     /**
