@@ -6,7 +6,6 @@ class FundingAuth extends Auth
 {
     protected string $scope = 'funding';
     protected string $accountName;
-    protected string $accountIdentifier;
 
     public function __construct(string $accountName = 'default')
     {
@@ -38,8 +37,8 @@ class FundingAuth extends Auth
         return $instance;
     }
 
-    public function getAccountIdentifier(): string
+    public function getAccountName(): string
     {
-        return $this->accountIdentifier;
+        return $this->accountName;
     }
 }

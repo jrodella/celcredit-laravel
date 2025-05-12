@@ -66,7 +66,7 @@ class CelcreditBaseApi
      */
     public function getFundingToken(): ?string
     {
-        $cacheKey = self::CACHE_NAME_FUNDING . "_" . $this->funding_auth->getAccountIdentifier();
+        $cacheKey = self::CACHE_NAME_FUNDING . "_" . $this->funding_auth->getAccountName();
     
         if (Cache::has($cacheKey)) {
             $this->funding_token = Cache::get($cacheKey);
