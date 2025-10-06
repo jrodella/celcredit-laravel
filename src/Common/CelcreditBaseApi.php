@@ -44,9 +44,9 @@ class CelcreditBaseApi
     /**
      * @throws RequestException
      */
-    public function getToken(): ?string
+    public function getToken($forceReset = false): ?string
     {
-        if (Cache::has($this::CACHE_NAME)) {
+        if (Cache::has($this::CACHE_NAME) && !$forceReset) {
             $this->token = Cache::get($this::CACHE_NAME);
         } else {
             $this->token = $this->auth->getToken();
@@ -64,27 +64,27 @@ class CelcreditBaseApi
     /**
      * @throws RequestException
      */
-    public function getFundingToken(): ?string
+    public function getFundingToken($forceReset = false): ?string
     {
         $cacheKey = self::CACHE_NAME_FUNDING . "_" . $this->funding_auth->getAccountName();
     
-        if (Cache::has($cacheKey)) {
+        if (Cache::has($cacheKey) && !$forceReset) {
             $this->funding_token = Cache::get($cacheKey);
         } else {
-            $this->funding_token = $this->funding_auth->getToken();
+            $this->funding_token = $this->funding_auth->getToken($forceReset);
             Cache::put($cacheKey, $this->funding_token, 2400);
         }
     
         return $this->funding_token;
     }
 
-    public function tokenResolver(string $endpoint): string
+    public function tokenResolver(string $endpoint, $forceReset = false): string
     {
         if (str_contains($endpoint, 'funding')) {
-            return $this->getFundingToken();
+            return $this->getFundingToken($forceReset);
         }
     
-        return $this->getToken();
+        return $this->getToken($forceReset);
     }
 
     /**
@@ -101,8 +101,16 @@ class CelcreditBaseApi
             $request = $request->withOptions($options);
         }
 
-        $request = $request->get($this->getFinalUrl($endpoint), $query)
-            ->throw();
+        try {
+            $request = $request->get($this->getFinalUrl($endpoint), $query)
+                ->throw();
+        } catch (\Throwable $th) {
+            $token = $this->tokenResolver($endpoint, true);
+
+            $request->withToken($token);
+            $request = $request->get($this->getFinalUrl($endpoint), $query)
+                ->throw();
+        }
 
         return ($responseJson) ? $request->json() : $request;
     }
@@ -143,12 +151,30 @@ class CelcreditBaseApi
         if (!$hasAttachments) {
             $request->asJson(); // Content-Type: application/json
         } else {
+            try {
+                return $request->asMultipart()
+                    ->post($this->getFinalUrl($endpoint), $multipart)
+                    ->throw()
+                    ->json();
+            } catch (\Throwable $th) {
+                $token = $this->tokenResolver($endpoint, true);
+                $request->withToken($token);
+            }
             return $request->asMultipart()
                 ->post($this->getFinalUrl($endpoint), $multipart)
                 ->throw()
                 ->json();
         }
 
+        try {
+            return $request->asJson()
+                ->post($this->getFinalUrl($endpoint), $body)
+                ->throw()
+                ->json();
+        } catch (\Throwable $th) {
+            $token = $this->tokenResolver($endpoint, true);
+            $request->withToken($token);
+        }
         return $request->asJson()
             ->post($this->getFinalUrl($endpoint), $body)
             ->throw()
@@ -177,6 +203,13 @@ class CelcreditBaseApi
             $data = $body;
         }
 
+        try {
+            $response = $request->put($url, $data);
+            return $response->throw()->json();
+        } catch (\Throwable $th) {
+            $token = $this->tokenResolver($endpoint, true);
+            $request->withToken($token);
+        }
         $response = $request->put($url, $data);
 
         return $response->throw()->json();
@@ -210,6 +243,14 @@ class CelcreditBaseApi
         $token = $this->tokenResolver($endpoint);
         $request = Http::withToken($token);
 
+        try {
+            return $request->delete($this->getFinalUrl($endpoint), $body)
+                ->throw()
+                ->json();
+        } catch (\Throwable $th) {
+            $token = $this->tokenResolver($endpoint, true);
+            $request->withToken($token);
+        }
         return $request->delete($this->getFinalUrl($endpoint), $body)
             ->throw()
             ->json();

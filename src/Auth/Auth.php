@@ -110,9 +110,9 @@ class Auth
      *
      * @throws RequestException
      */
-    public function getToken(): ?string
+    public function getToken($forceReset = false): ?string
     {
-        if (now()->unix() > $this->tokenExpiry || ! $this->token) {
+        if (now()->unix() > $this->tokenExpiry || ! $this->token || $forceReset) {
             $this->auth();
         }
 
