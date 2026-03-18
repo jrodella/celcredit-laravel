@@ -2,7 +2,9 @@
 
 namespace Celcredit\Common;
 
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Http\File;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -118,7 +120,7 @@ class CelcreditBaseApi
     /**
      * @throws RequestException
      */
-    public function post(string $endpoint, array $body = []): array
+    public function post(string $endpoint, array $body = [], bool $returnErrors = false): array
     {
         $token = $this->tokenResolver($endpoint);
         $request = Http::withToken($token)->acceptJson();
@@ -127,6 +129,14 @@ class CelcreditBaseApi
         $isGuzzleMultipart = !empty($body) && isset($body[0]['name']);
 
         if ($isGuzzleMultipart) {
+            if ($returnErrors) {
+                return $this->postAndReturnResponse(
+                    $request->asMultipart(),
+                    $endpoint,
+                    $body
+                );
+            }
+
             return $request->asMultipart()
                 ->post($this->getFinalUrl($endpoint), $body)
                 ->throw()
@@ -151,6 +161,14 @@ class CelcreditBaseApi
         if (!$hasAttachments) {
             $request->asJson(); // Content-Type: application/json
         } else {
+            if ($returnErrors) {
+                return $this->postAndReturnResponse(
+                    $request->asMultipart(),
+                    $endpoint,
+                    $multipart
+                );
+            }
+
             try {
                 return $request->asMultipart()
                     ->post($this->getFinalUrl($endpoint), $multipart)
@@ -166,6 +184,14 @@ class CelcreditBaseApi
                 ->json();
         }
 
+        if ($returnErrors) {
+            return $this->postAndReturnResponse(
+                $request->asJson(),
+                $endpoint,
+                $body
+            );
+        }
+
         try {
             return $request->asJson()
                 ->post($this->getFinalUrl($endpoint), $body)
@@ -179,6 +205,38 @@ class CelcreditBaseApi
             ->post($this->getFinalUrl($endpoint), $body)
             ->throw()
             ->json();
+    }
+
+    private function postAndReturnResponse(
+        PendingRequest $request,
+        string $endpoint,
+        array $body
+    ): array {
+        $response = $request->post($this->getFinalUrl($endpoint), $body);
+
+        if ($response->status() === 401) {
+            $token = $this->tokenResolver($endpoint, true);
+            $request->withToken($token);
+            $response = $request->post($this->getFinalUrl($endpoint), $body);
+        }
+
+        return $this->normalizeResponse($response);
+    }
+
+    private function normalizeResponse(Response $response): array
+    {
+        $body = $response->json();
+
+        if ($body === null) {
+            $rawBody = $response->body();
+            $body = $rawBody === '' ? null : $rawBody;
+        }
+
+        return [
+            'status' => $response->status(),
+            'successful' => $response->successful(),
+            'body' => $body,
+        ];
     }
 
     /**

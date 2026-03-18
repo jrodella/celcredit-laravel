@@ -41,6 +41,7 @@ class BankingOriginatorClient extends CelcreditBaseApi
     public const SIMULATE_TOTAL_AMOUNT = '/banking/originator/applications/preview-total-amount';
     public const CREATE_APPLICATION = '/banking/originator/applications';
     public const GET_APPLICATION = '/banking/originator/applications/%s';
+    public const CANCEL_APPLICATION = '/banking/originator/applications/%s/cancel';
     public const SIGN_APPLICATION = '/banking/originator/applications/%s/signatures';
     public const VIEW_APPLICATION = '/banking/originator/applications/%s/agreement';
 
@@ -153,6 +154,11 @@ class BankingOriginatorClient extends CelcreditBaseApi
         $this->validateRequest($application->toArray(), ApplicationRule::rules());
 
         return $this->post(self::CREATE_APPLICATION, $application->toArray());
+    }
+
+    public function cancelApplication(string $applicationId): array
+    {
+        return $this->post(sprintf(self::CANCEL_APPLICATION, $applicationId), [], true);
     }
 
     // 7. Assinatura de Solicitação
